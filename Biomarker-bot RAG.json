@@ -1,0 +1,229 @@
+{
+  "name": "Biomarker-bot RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are BiomarkerBot, a specialist research assistant for a drug discovery team focused on precision oncology. You have access to a curated knowledge base of peer-reviewed papers on biomarker discovery and patient selection for targeted therapies.\n\nWhen answering questions, only use information retrieved from the vector store. Do not use outside knowledge. If the answer cannot be found in the available research papers, say so clearly rather than guessing.\n\nAlways respond in plain English suitable for clinical operations, regulatory, and business development teams who may not have a scientific background. Where relevant, mention which biomarker, cancer type, or therapy the information relates to. Keep answers concise and factual."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        304,
+        -160
+      ],
+      "id": "43368d42-cf25-43f7-ac3f-abfcd42e155f",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        16
+      ],
+      "id": "5529725f-d44a-4860-b5b9-52bfdba9057c",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "10ZkHsXywAn3v7Mf",
+          "name": "testing 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "docs",
+        "toolDescription": "=use this tool retrieve information from the papers in the vector store to answer  {{ $json.text }}",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "biomarker",
+          "mode": "list",
+          "cachedResultName": "biomarker"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1,
+      "position": [
+        480,
+        16
+      ],
+      "id": "996a854b-7771-43f3-8846-498946a7ab83",
+      "name": "Pinecone Vector Store1",
+      "credentials": {
+        "pineconeApi": {
+          "id": "k75lmLDkJTGIhmGI",
+          "name": "PineconeApi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        160
+      ],
+      "id": "c01e1d39-f0cf-4fe0-b6a6-8f8b2d57fc32",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "10ZkHsXywAn3v7Mf",
+          "name": "testing 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C0AURF976PM",
+          "mode": "list",
+          "cachedResultName": "biomarker-research"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -144
+      ],
+      "id": "ccd1f80d-9b33-4d51-9446-15199fce0640",
+      "name": "Slack Trigger",
+      "webhookId": "28ef258d-4883-4347-9a4d-3bd9e6dc7364",
+      "credentials": {
+        "slackApi": {
+          "id": "GSSUAjaLVZRPc3ff",
+          "name": "Biomarker"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AURF976PM",
+          "mode": "list",
+          "cachedResultName": "biomarker-research"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        656,
+        -160
+      ],
+      "id": "35b19729-dafd-4ac0-b632-42896567d8c7",
+      "name": "Send a message",
+      "webhookId": "1c666371-ad0c-41d6-b4d5-4a774c89f4b3",
+      "credentials": {
+        "slackApi": {
+          "id": "GSSUAjaLVZRPc3ff",
+          "name": "Biomarker"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7cd983e6-0271-49f4-bcf9-875707871bc0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0f61759ac7a0e0218dca92aba357946cb105ee2324019ea9921d4427e2cd8a4a"
+  },
+  "id": "szTOnJGaFozp8s0f",
+  "tags": [
+    {
+      "updatedAt": "2026-04-21T17:31:48.773Z",
+      "createdAt": "2026-04-21T17:31:48.773Z",
+      "id": "XXfPfr7VTi8x5hh7",
+      "name": "project"
+    }
+  ]
+}
