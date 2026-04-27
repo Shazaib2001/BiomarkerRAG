@@ -136,10 +136,6 @@ BiomarkerRAG/
 - Implement a feedback loop using Slack reactions to evaluate retrieval quality
 - Add scheduled sync to automatically ingest new papers added to Google Drive
 
-## Related Projects
-
-[Autism Screening Classifier](link) — an ML classification model for early autism screening using behavioural data
-
 ## License
 
 MIT
